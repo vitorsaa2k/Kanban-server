@@ -2,7 +2,6 @@ require('dotenv').config()
 const Router = require('express').Router()
 const User = require('../Models/User')
 const jwt = require('jsonwebtoken')
-const crypto = require('crypto')
 
 let user = [
   {
@@ -11,7 +10,7 @@ let user = [
     tasks: [
       {
         task: 'Center the div',
-        isCritical: false,
+        isCritical: true,
         isDone: false,
         id: '3JSDDN'
       },
@@ -104,6 +103,30 @@ function updateToDos(data) {
   
   return user
 }
+
+Router.post('/kanban/newMarker', async(req, res) => {
+  const newMarker = req.body
+  res.json({
+    status: 'SUCCESS'
+  })
+  user.push({
+    ...newMarker,
+    tasks: []
+  })
+})
+
+Router.post('/kanban/newTask', async(req, res) => {
+  const {title, isCritical, task} = req.body
+
+  const [destination] = user.filter(marker => (
+    marker.title === title
+  ))
+  const destinationIndex = user.indexOf(destination)
+  // need to add an id generator
+  user[destinationIndex].tasks.push({isCritical, task, isDone: false})
+  console.log(destinationIndex)
+  res.json(destination)
+})
 
 
 Router.post('/signin', async (req, res) => {
