@@ -2,6 +2,9 @@ require('dotenv').config()
 const Router = require('express').Router()
 const User = require('../Models/User')
 const jwt = require('jsonwebtoken')
+const generateId = () => {
+  return Math.random().toString(16).slice(2)
+}
 
 let user = [
   {
@@ -46,72 +49,31 @@ let user = [
       }
     ]
   },
-  {
-    title: 'a',
-    color: '',
-    tasks: [
-      {
-        task: 'test',
-        isCritical: false,
-        isDone: false,
-        id: 'FDG61'
-      }
-    ]
-  },
-  {
-    title: 'b',
-    color: '',
-    tasks: [
-      {
-        task: 'Change the input color',
-        isCritical: false,
-        isDone: false,
-        id: 'ASDFS7'
-      },
-    ]
-  },
-  {
-    title: 'c',
-    color: '',
-    tasks: [
-      {
-        task: 'Change the input color',
-        isCritical: false,
-        isDone: false,
-        id: 'ASFAS645'
-      }
-    ]
-  },
 ]
 
 function updateToDos(data) {
-  let destination = {...user.filter((user) => user.title === data.destination.droppableId)}
-  let destinationIndex = user.indexOf(destination[0])
-  let source = {...user.filter((user) => user.title === data.source.droppableId)}
-  let sourceIndex = user.indexOf(source[0])
+  let [destination] = user.filter((user) => user.title === data.destination.droppableId)
+  let destinationIndex = user.indexOf(destination)
+  let [source] = user.filter((user) => user.title === data.source.droppableId)
+  let sourceIndex = user.indexOf(source)
 
-  if(data.destination.droppableId === data.source.droppableId) {
-    let dest = {...source[0].tasks[data.source.index]}
-    let sour = {...destination[0].tasks[data.destination.index]}
-    user[destinationIndex].tasks[data.destination.index] = dest
-    user[sourceIndex].tasks[data.source.index] = sour
+  let objectInMovement = source.tasks[data.source.index]
 
-  } else {
-    user[destinationIndex].tasks.splice(data.destination.index, 0, source[0].tasks[data.source.index])
-    user[sourceIndex].tasks.splice(data.source.index, 1)
-  }
+  user[sourceIndex].tasks.splice(data.source.index, 1)
+  user[destinationIndex].tasks.splice(data.destination.index, 0, objectInMovement)
   
   return user
 }
 
 Router.post('/kanban/newMarker', async(req, res) => {
   const newMarker = req.body
-  res.json({
-    status: 'SUCCESS'
-  })
   user.push({
     ...newMarker,
     tasks: []
+  })
+  res.json({
+    status: 'SUCCESS',
+    user
   })
 })
 
@@ -121,10 +83,9 @@ Router.post('/kanban/newTask', async(req, res) => {
   const [destination] = user.filter(marker => (
     marker.title === title
   ))
+
   const destinationIndex = user.indexOf(destination)
-  // need to add an id generator
-  user[destinationIndex].tasks.push({isCritical, task, isDone: false})
-  console.log(destinationIndex)
+  user[destinationIndex].tasks.push({task, isCritical, isDone: false, id: generateId()})
   res.json(destination)
 })
 
